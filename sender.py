@@ -47,9 +47,7 @@ def receive_STARTACK(s,lastackreceived,receiver_ip,receiver_port,Seq_num,byte_pk
             
             if(isNotCorrupted and Seq_num ==pkt_header.seq_num and pkt_header.type == ACK ):
                  break      
-
         except time.time() - lastackreceived > timeout: 
-
             s.sendto(byte_pkt, (receiver_ip, receiver_port))
             lastackreceived = time.time # Reset the timer for new ack packages
             receive_STARTACK(s,lastackreceived,receiver_ip,receiver_port,Seq_num,byte_pkt)
@@ -81,10 +79,9 @@ def receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base) :
             
             if(isNotCorrupted and pkt_header.type == ACK):
                 base =pkt_header.seq_num + 1 # ACK received
-                break      
+                break  
             # at this point we ensured that arriving packet is not corrupted.    
         except time.time() - lastackreceived > timeout: 
-
             # Resend all packets in window
             for package in packages:
                 s.sendto(bytes(str(package),'utf-8'), (receiver_ip, receiver_port))
@@ -120,13 +117,19 @@ def receive_ENDACK(s,lastackreceived,receiver_ip,receiver_port,base,byte_pkt):
 
 def main():
     """Parse command-line arguments and call sender function """
-    if len(sys.argv) != 5:
-        sys.exit("Usage: python sender.py [Receiver IP] [Receiver Port] [Window Size] < [message]")
-    receiver_ip = socket.gethostbyname(sys.argv[1])
-    receiver_port = int(sys.argv[2])
-    window_size = int(sys.argv[3])
-    message = sys.argv[4]
+    
+    #if len(sys.argv) != 5:
+    #    sys.exit("Usage: python sender.py [Receiver IP] [Receiver Port] [Window Size] < [message]")
+    #receiver_ip = socket.gethostbyname(sys.argv[1])
+    #receiver_port = int(sys.argv[2])
+    #window_size = int(sys.argv[3])
+    #message = sys.argv[4]
+    receiver_ip = socket.gethostbyname("127.0.0.1")
+    receiver_port = 5000
+    window_size = 50
+    message = "mesaj"
     sender(receiver_ip, receiver_port, window_size,message)
+    
 
 if __name__ == "__main__":
     main()
