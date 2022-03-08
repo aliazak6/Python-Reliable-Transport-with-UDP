@@ -28,7 +28,7 @@ def receiver(receiver_port, window_size):
         
         pkt_header = PacketHeader(pkt[:16])
         msg = pkt[16:16+pkt_header.length]
-        print(decode(pkt)[0])
+        print(pkt)
         # verify checksum
         isNotCorrupted = verifyChecksum(pkt_header,msg)
         #send ACK if checksum is correct
@@ -40,7 +40,7 @@ def receiver(receiver_port, window_size):
                     buffer[expected_seq_num] = msg
                 sendACK(s,address,expected_seq_num) # expected seq num is sent anycase
                 if(expected_seq_num == pkt_header.seq_num): 
-                    expected_seq_num = calculateSeq()
+                    expected_seq_num = calculateSeq(buffer,expected_seq_num)
             if(pkt_header.type == END):
                 EOF = True
                 sendACK(s,address,pkt_header.seq_num)
@@ -63,7 +63,7 @@ def sendACK (s,address, Seq_num):
     pkt_header = PacketHeader(type=ACK, seq_num=Seq_num, length=0)
     pkt_header.checksum = compute_checksum(pkt_header)
     pkt = pkt_header
-    s.sendto(pkt, address)
+    s.sendto(bytes(pkt), address)
 
 def constructDATA(f,msg,seq_num):
     f.write(msg)

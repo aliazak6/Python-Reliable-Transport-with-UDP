@@ -31,8 +31,9 @@ def sendSTART(s,receiver_ip,receiver_port,lastackreceived):
     pkt_header = PacketHeader(type=START, seq_num=Seq_num, length=0)
     pkt_header.checksum = compute_checksum(pkt_header) # pkt_header length is 16 bytes // 4 ints.
     pkt = pkt_header
-    byte_pkt = bytes(str(pkt),'utf-8')
+    byte_pkt = bytes(pkt)
     s.sendto(byte_pkt, (receiver_ip, receiver_port))
+    print(byte_pkt)
     receive_STARTACK(s,lastackreceived,receiver_ip,receiver_port,Seq_num,byte_pkt)
 
 def receive_STARTACK(s,lastackreceived,receiver_ip,receiver_port,Seq_num,byte_pkt):
@@ -43,7 +44,7 @@ def receive_STARTACK(s,lastackreceived,receiver_ip,receiver_port,Seq_num,byte_pk
 
             # extract header and payload
             pkt_header = PacketHeader(pkt[:16])
-            isNotCorrupted = verifyChecksum(pkt_header)
+            isNotCorrupted = verifyChecksumHeader(pkt_header)
             
             if(isNotCorrupted and Seq_num ==pkt_header.seq_num and pkt_header.type == ACK ):
                  break      
@@ -62,7 +63,7 @@ def sendDATA(s,receiver_ip,receiver_port,window_size,base,lastackreceived,msg) :
         pkt_header.checksum = compute_checksum(pkt_header / pkt_msg)
         pkt = pkt_header / pkt_msg
         packages.append(pkt)
-        s.sendto(bytes(str(pkt),'utf-8'), (receiver_ip, receiver_port))
+        s.sendto(bytes(pkt), (receiver_ip, receiver_port))
         sent+=1 
 
     receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base)     
@@ -75,7 +76,7 @@ def receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base) :
 
             # extract header and payload
             pkt_header = PacketHeader(pkt[:16])
-            isNotCorrupted = verifyChecksum(pkt_header)
+            isNotCorrupted = verifyChecksumHeader(pkt_header)
             
             if(isNotCorrupted and pkt_header.type == ACK):
                 base =pkt_header.seq_num + 1 # ACK received
@@ -84,7 +85,7 @@ def receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base) :
         except time.time() - lastackreceived > timeout: 
             # Resend all packets in window
             for package in packages:
-                s.sendto(bytes(str(package),'utf-8'), (receiver_ip, receiver_port))
+                s.sendto(bytes(package), (receiver_ip, receiver_port))
             lastackreceived = time.time # Reset the timer for new ack packages
             receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base)
                 
@@ -92,7 +93,7 @@ def sendEND(s,receiver_ip,receiver_port,lastackreceived,base):
     pkt_header = PacketHeader(type=END, seq_num=base, length=0)
     pkt_header.checksum = compute_checksum(pkt_header) # pkt_header length is 16 bytes // 4 ints.
     pkt = pkt_header
-    byte_pkt = bytes(str(pkt),'utf-8')
+    byte_pkt = bytes(pkt)
     s.sendto(byte_pkt, (receiver_ip, receiver_port))
     receive_ENDACK(s,lastackreceived,receiver_ip,receiver_port,base,byte_pkt)                    
 
@@ -104,7 +105,7 @@ def receive_ENDACK(s,lastackreceived,receiver_ip,receiver_port,base,byte_pkt):
 
             # extract header and payload
             pkt_header = PacketHeader(pkt[:16])
-            isNotCorrupted = verifyChecksum(pkt_header)
+            isNotCorrupted = verifyChecksumHeader(pkt_header)
             
             if(isNotCorrupted and base ==pkt_header.seq_num and pkt_header.type == ACK ):
                  break      
