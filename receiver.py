@@ -2,6 +2,7 @@ import sys
 import socket
 import time
 from util import *
+from encodings.utf_8 import decode
 
 START = 0
 END = 1
@@ -24,9 +25,10 @@ def receiver(receiver_port, window_size):
         # receive packet        
         pkt, address = s.recvfrom(1500)
         # extract header and payload
+        
         pkt_header = PacketHeader(pkt[:16])
         msg = pkt[16:16+pkt_header.length]
-
+        print(decode(pkt)[0])
         # verify checksum
         isNotCorrupted = verifyChecksum(pkt_header,msg)
         #send ACK if checksum is correct
