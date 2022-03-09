@@ -19,10 +19,10 @@ def sender(receiver_ip, receiver_port, window_size,message):
     sendSTART(s,receiver_ip,receiver_port,lastackreceived)
     # at this point connection established and data will be sent
     base = 0
-    pkg_size = len(message) / 1456 + 1
+    pkg_size = int(len(message) / 1456 + 1)
     while base < pkg_size:
         lastackreceived = time.time()
-        sendDATA(s,receiver_ip,receiver_port, window_size, base,lastackreceived,message[base*1456:(base+window_size)*1455]) # 0-1455 , 1456-2911, ...
+        sendDATA(s,receiver_ip,receiver_port, window_size, base,lastackreceived,message[base*1456:(base+window_size)*1455],pkg_size) # 0-1455 , 1456-2911, ...
     lastackreceived = time.time()
     sendEND()
 
@@ -53,11 +53,11 @@ def receive_STARTACK(s,lastackreceived,receiver_ip,receiver_port,Seq_num,byte_pk
             lastackreceived = time.time # Reset the timer for new ack packages
             receive_STARTACK(s,lastackreceived,receiver_ip,receiver_port,Seq_num,byte_pkt)
 
-def sendDATA(s,receiver_ip,receiver_port,window_size,base,lastackreceived,msg) :
+def sendDATA(s,receiver_ip,receiver_port,window_size,base,lastackreceived,msg,pkg_size) :
     packages = [] # storing window in order to easily retransmit packages
     sent = base
     
-    while sent < base + window_size:
+    while sent < min(base + window_size,pkg_size):
         pkt_header = PacketHeader(type=DATA, seq_num=sent, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
         pkt_msg = msg[sent*1456:(sent+1)*1455]
         pkt_header.checksum = compute_checksum(pkt_header / pkt_msg)
@@ -66,7 +66,7 @@ def sendDATA(s,receiver_ip,receiver_port,window_size,base,lastackreceived,msg) :
         s.sendto(bytes(pkt), (receiver_ip, receiver_port))
         sent+=1 
 
-    receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base)     
+    base = receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base)     
 
 def receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base) :
     while(True):
@@ -80,7 +80,7 @@ def receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base) :
             
             if(isNotCorrupted and pkt_header.type == ACK):
                 base =pkt_header.seq_num + 1 # ACK received
-                break  
+                return base  
             # at this point we ensured that arriving packet is not corrupted.    
         except time.time() - lastackreceived > timeout: 
             # Resend all packets in window
@@ -108,7 +108,7 @@ def receive_ENDACK(s,lastackreceived,receiver_ip,receiver_port,base,byte_pkt):
             isNotCorrupted = verifyChecksumHeader(pkt_header)
             
             if(isNotCorrupted and base ==pkt_header.seq_num and pkt_header.type == ACK ):
-                 break      
+                exit                       
 
         except time.time() - lastackreceived > timeout: 
 

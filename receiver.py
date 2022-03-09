@@ -37,26 +37,27 @@ def receiver(receiver_port, window_size):
                 sendACK(s,address,pkt_header.seq_num)
             if(pkt_header.type == DATA):
                 if(pkt_header.seq_num <= expected_seq_num+window_size): # bufferin out of order packages
-                    buffer[expected_seq_num] = msg
+                    buffer.append(pkt)
                 sendACK(s,address,expected_seq_num) # expected seq num is sent anycase
                 if(expected_seq_num == pkt_header.seq_num): 
-                    expected_seq_num = calculateSeq(buffer,expected_seq_num)
+                    expected_seq_num = calculateSeq(buffer,expected_seq_num) # updates seq_num
             if(pkt_header.type == END):
                 EOF = True
                 sendACK(s,address,pkt_header.seq_num)
         # print payload
         print(str(msg))
-
     f.write(buffer) # save file when transmition ends.
 
     f.close()
 
-def calculateSeq(buffer,expected_seq_num):
-    if(buffer[expected_seq_num]): # if it is buffered find next necessary packet
-        expected_seq_num +=1
-        calculateSeq(buffer,expected_seq_num)
-    else:
-        expected_seq_num +=1
+def calculateSeq(buffer,expected_seq_num) -> int :
+    try:
+        if(buffer[expected_seq_num]) : # if it is buffered find next necessary packet
+            expected_seq_num +=1
+            calculateSeq(buffer,expected_seq_num)
+            return expected_seq_num
+    except IndexError:
+        return
 
 def sendACK (s,address, Seq_num):
 
