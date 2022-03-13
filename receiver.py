@@ -38,6 +38,8 @@ def receiver(receiver_port, window_size):
             if(pkt_header.type == DATA):
                 if(pkt_header.seq_num <= expected_seq_num+window_size): # bufferin out of order packages
                     buffer.append(pkt)
+                    print(str(msg))
+                    #f.write(buffer) # save file when transmition ends.
                 sendACK(s,address,expected_seq_num) # expected seq num is sent anycase
                 if(expected_seq_num == pkt_header.seq_num): 
                     expected_seq_num = calculateSeq(buffer,expected_seq_num) # updates seq_num
@@ -45,8 +47,8 @@ def receiver(receiver_port, window_size):
                 EOF = True
                 sendACK(s,address,pkt_header.seq_num)
         # print payload
-        print(str(msg))
-    f.write(buffer) # save file when transmition ends.
+        
+    
 
     f.close()
 

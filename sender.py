@@ -22,9 +22,9 @@ def sender(receiver_ip, receiver_port, window_size,message):
     pkg_size = int(len(message) / 1456 + 1)
     while base < pkg_size:
         lastackreceived = time.time()
-        sendDATA(s,receiver_ip,receiver_port, window_size, base,lastackreceived,message[base*1456:(base+window_size)*1455],pkg_size) # 0-1455 , 1456-2911, ...
+        base = sendDATA(s,receiver_ip,receiver_port, window_size, base,lastackreceived,message[base*1456:(base+window_size)*1455],pkg_size) # 0-1455 , 1456-2911, ...
     lastackreceived = time.time()
-    sendEND()
+    sendEND(s,receiver_ip,receiver_port,lastackreceived,base)
 
 def sendSTART(s,receiver_ip,receiver_port,lastackreceived):
     Seq_num=randint(0,999999)
@@ -66,7 +66,8 @@ def sendDATA(s,receiver_ip,receiver_port,window_size,base,lastackreceived,msg,pk
         s.sendto(bytes(pkt), (receiver_ip, receiver_port))
         sent+=1 
 
-    base = receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base)     
+    base = receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base)   
+    return base  
 
 def receiveACK(s,lastackreceived,packages,receiver_ip,receiver_port,base) :
     while(True):
@@ -108,7 +109,7 @@ def receive_ENDACK(s,lastackreceived,receiver_ip,receiver_port,base,byte_pkt):
             isNotCorrupted = verifyChecksumHeader(pkt_header)
             
             if(isNotCorrupted and base ==pkt_header.seq_num and pkt_header.type == ACK ):
-                exit                       
+                return                       
 
         except time.time() - lastackreceived > timeout: 
 
@@ -130,7 +131,7 @@ def main():
     window_size = 50
     message = "mesaj"
     sender(receiver_ip, receiver_port, window_size,message)
-    
+    print("File successfully sent.")
 
 if __name__ == "__main__":
     main()
