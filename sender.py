@@ -16,21 +16,22 @@ def sender(receiver_ip, receiver_port, window_size,message):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     lastackreceived = time.time()
-    sendSTART(s,receiver_ip,receiver_port,lastackreceived)
+    pkg_size = int(len(message) / 1456 + 1)
+    sendSTART(s,receiver_ip,receiver_port,lastackreceived,pkg_size)
     # at this point connection established and data will be sent
     base = 0
-    pkg_size = int(len(message) / 1456 + 1)
+    
     while base < pkg_size:
         lastackreceived = time.time()
         base = sendDATA(s,receiver_ip,receiver_port, window_size, base,lastackreceived,message[base*1456:(base+window_size)*1455],pkg_size) # 0-1455 , 1456-2911, ...
     lastackreceived = time.time()
     sendEND(s,receiver_ip,receiver_port,lastackreceived,base)
 
-def sendSTART(s,receiver_ip,receiver_port,lastackreceived):
+def sendSTART(s,receiver_ip,receiver_port,lastackreceived,pkg_size):
     Seq_num=randint(0,999999)
-    pkt_header = PacketHeader(type=START, seq_num=Seq_num, length=0)
-    pkt_header.checksum = compute_checksum(pkt_header) # pkt_header length is 16 bytes // 4 ints.
-    pkt = pkt_header
+    pkt_header = PacketHeader(type=START, seq_num=Seq_num, length=4)
+    pkt_header.checksum = compute_checksum(pkt_header / str(pkg_size)) # pkt_header length is 16 bytes // 4 ints.
+    pkt = pkt_header / str(pkg_size)
     byte_pkt = bytes(pkt)
     s.sendto(byte_pkt, (receiver_ip, receiver_port))
     print(byte_pkt)

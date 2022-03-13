@@ -16,11 +16,10 @@ def receiver(receiver_port, window_size):
     s.bind(('127.0.0.1', receiver_port)) # 127.0.0.1 means localhost (same computer with sender)
     expected_seq_num = 0
     f = open("output", "wb")
-    buffer = []
     EOF = False # end of file
 
 
-    while ~EOF:
+    while EOF != True:
 
         # receive packet        
         pkt, address = s.recvfrom(1500)
@@ -35,11 +34,13 @@ def receiver(receiver_port, window_size):
         if(isNotCorrupted):
             if(pkt_header.type == START):
                 sendACK(s,address,pkt_header.seq_num)
+                buffer_size = int(msg)
+                buffer = [None]*buffer_size
             if(pkt_header.type == DATA):
                 if(pkt_header.seq_num <= expected_seq_num+window_size): # bufferin out of order packages
-                    buffer.append(pkt)
+                    buffer[pkt_header.seq_num] = (msg)
                     print(str(msg))
-                    #f.write(buffer) # save file when transmition ends.
+                    
                 sendACK(s,address,expected_seq_num) # expected seq num is sent anycase
                 if(expected_seq_num == pkt_header.seq_num): 
                     expected_seq_num = calculateSeq(buffer,expected_seq_num) # updates seq_num
@@ -49,8 +50,7 @@ def receiver(receiver_port, window_size):
         # print payload
         
     
-
-    f.close()
+    constructDATA(f,buffer)
 
 def calculateSeq(buffer,expected_seq_num) -> int :
     try:
@@ -68,8 +68,10 @@ def sendACK (s,address, Seq_num):
     pkt = pkt_header
     s.sendto(bytes(pkt), address)
 
-def constructDATA(f,msg,seq_num):
-    f.write(msg)
+def constructDATA(f,buffer):
+    for msg in buffer:
+        f.write(msg)
+    f.close()
     
 
 
