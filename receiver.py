@@ -77,10 +77,12 @@ def constructDATA(f,buffer):
 
 def main():
     """Parse command-line argument and call receiver function """
-    if len(sys.argv) != 3:
-        sys.exit("Usage: python receiver.py [Receiver Port] [Window Size]")
-    receiver_port = int(sys.argv[1])
-    window_size = int(sys.argv[2])
+    #if len(sys.argv) != 3:
+    #    sys.exit("Usage: python receiver.py [Receiver Port] [Window Size]")
+    #receiver_port = int(sys.argv[1])
+    #window_size = int(sys.argv[2])
+    receiver_port = 5000
+    window_size = 3
     receiver(receiver_port, window_size)
 
 if __name__ == "__main__":
