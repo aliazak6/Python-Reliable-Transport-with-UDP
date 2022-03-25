@@ -15,7 +15,7 @@ def receiver(receiver_port, window_size):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind(('127.0.0.1', receiver_port)) # 127.0.0.1 means localhost (same computer with sender)
     expected_seq_num = 0
-    f = open("output", "wb")
+    f = open("output.txt", "wb")
     EOF = False # end of file
 
 
@@ -79,12 +79,10 @@ def constructDATA(f,buffer):
 
 def main():
     """Parse command-line argument and call receiver function """
-    #if len(sys.argv) != 3:
-    #    sys.exit("Usage: python receiver.py [Receiver Port] [Window Size]")
-    #receiver_port = int(sys.argv[1])
-    #window_size = int(sys.argv[2])
-    receiver_port = 5000
-    window_size = 20
+    if len(sys.argv) != 3:
+        sys.exit("Usage: python receiver.py [Receiver Port] [Window Size]")
+    receiver_port = int(sys.argv[1])
+    window_size = int(sys.argv[2])
     receiver(receiver_port, window_size)
 
 if __name__ == "__main__":
