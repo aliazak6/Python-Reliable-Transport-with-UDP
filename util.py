@@ -17,12 +17,24 @@ def compute_checksum(pkt):
 
 def verifyChecksum(pkt_header,msg) -> bool:
 
-                # verify checksum
-                pkt_checksum = pkt_header.checksum
-                pkt_header.checksum = 0
-                computed_checksum = compute_checksum(pkt_header / msg)
-                if pkt_checksum != computed_checksum:
-                    print("checksums not match")
-                    return False
-                else:
-                    return True
+    # verify checksum
+    pkt_checksum = pkt_header.checksum
+    pkt_header.checksum = 0
+    computed_checksum = compute_checksum(pkt_header / msg)
+    if pkt_checksum != computed_checksum:
+        print("checksums not match")
+        return False
+    else:
+        return True
+
+def verifyChecksumHeader(pkt_header) -> bool: # used for ack messages
+                
+    # verify checksum
+    pkt_checksum = pkt_header.checksum
+    pkt_header.checksum = 0
+    computed_checksum = compute_checksum(pkt_header)
+    if pkt_checksum != computed_checksum:
+        print("checksums not match")
+        return False
+    else:
+        return True
