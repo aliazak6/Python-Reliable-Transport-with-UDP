@@ -71,6 +71,7 @@ def sendACK (s,address, Seq_num):
 def constructDATA(f,buffer):
     for msg in buffer:
         f.write(msg)
+        f.write(bytes(" ", "UTF-8"))
     f.close()
     
 
