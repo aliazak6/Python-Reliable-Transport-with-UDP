@@ -22,7 +22,7 @@ def sender(receiver_ip, receiver_port, window_size,message):
     base = 0
     buffer_size = pkg_size
     buffer = [0]*buffer_size
-    while base < pkg_size:
+    while base < pkg_size-1:
         base = sendDATA(s,receiver_ip,receiver_port, window_size, base, message,pkg_size,buffer,expected_seq_num)
     sendEND(s,receiver_ip,receiver_port,base)
 
@@ -58,15 +58,22 @@ def sendDATA(s,receiver_ip,receiver_port,window_size,base,msg,pkg_size,buffer,ex
     sent = base
     
     while sent < min(base + window_size,pkg_size):
-        if(buffer[sent] == 0):
+        if(buffer[sent] == 0): # if receiver didnt ack that package
             pkt_header = PacketHeader(type=DATA, seq_num=sent, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
+
+            p = randint(1,30)
             pkt_msg = msg[sent*1456:(sent+1)*1456-1]
             pkt_header.checksum = compute_checksum(pkt_header / pkt_msg)
             print(len(pkt_msg) ,"   " ,sent)
             pkt = pkt_header / pkt_msg
             packages.append(pkt)
+            if(p%4==0):
+                pkt_header = PacketHeader(type=DATA, seq_num=sent-1, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
+                pkt_header.checksum = compute_checksum(pkt_header / pkt_msg)
+                pkt = pkt_header / pkt_msg
             s.sendto(bytes(pkt), (receiver_ip, receiver_port))
-            sent+=1 
+        sent+=1 
+        
 
     base = receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num)   
     return base  
@@ -94,8 +101,9 @@ def receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num
         else:
             if(old_base == base): # Resend all packets in window
                 for package in packages:
-                    s.sendto(bytes(package), (receiver_ip, receiver_port))
-                receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num)
+                    if(buffer[package.seq_num]==0):
+                        s.sendto(bytes(package), (receiver_ip, receiver_port))
+                base = receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num)
             else:
                 return base
                 

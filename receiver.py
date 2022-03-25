@@ -27,10 +27,10 @@ def receiver(receiver_port, window_size):
         
         pkt_header = PacketHeader(pkt[:16])
         msg = pkt[16:16+pkt_header.length]
-        print(pkt)
         # verify checksum
         isNotCorrupted = verifyChecksum(pkt_header,msg)
         #send ACK if checksum is correct
+        print(pkt_header.seq_num , expected_seq_num)
         if(isNotCorrupted):
             if(pkt_header.type == START):
                 sendACK(s,address,pkt_header.seq_num)
@@ -38,10 +38,10 @@ def receiver(receiver_port, window_size):
                 buffer = [None]*buffer_size
             if(pkt_header.type == DATA):
                 if(pkt_header.seq_num <= expected_seq_num+window_size): # bufferin out of order packages
+                    print(pkt_header.seq_num)
                     buffer[pkt_header.seq_num] = (msg)
-                    print(str(msg))
                     
-                sendACK(s,address,expected_seq_num) # expected seq num is sent anycase
+                sendACK(s,address,pkt_header.seq_num) # expected seq num is sent anycase
                 if(expected_seq_num == pkt_header.seq_num): 
                     expected_seq_num = calculateSeq(buffer,expected_seq_num) # updates seq_num
             if(pkt_header.type == END):
@@ -56,10 +56,12 @@ def calculateSeq(buffer,expected_seq_num) -> int :
     try:
         if(buffer[expected_seq_num]) : # if it is buffered find next necessary packet
             expected_seq_num +=1
-            calculateSeq(buffer,expected_seq_num)
+            expected_seq_num = calculateSeq(buffer,expected_seq_num)
             return expected_seq_num
+        return expected_seq_num
+
     except IndexError:
-        return
+        return 
 
 def sendACK (s,address, Seq_num):
 
