@@ -132,16 +132,12 @@ def receive_ENDACK(s,receiver_ip,receiver_port,base,byte_pkt):
 def main():
     """Parse command-line arguments and call sender function """
     
-    #if len(sys.argv) != 5:
-    #    sys.exit("Usage: python sender.py [Receiver IP] [Receiver Port] [Window Size] < [message]")
-    #receiver_ip = socket.gethostbyname(sys.argv[1])
-    #receiver_port = int(sys.argv[2])
-    #window_size = int(sys.argv[3])
-    #message = sys.argv[4]
-    receiver_ip = "127.0.0.1"
-    receiver_port = 5000
-    window_size = 3
-    message = "ALİABİ   "
+    if len(sys.argv) != 5:
+        sys.exit("Usage: python sender.py [Receiver IP] [Receiver Port] [Window Size] < [message]")
+    receiver_ip = socket.gethostbyname(sys.argv[1])
+    receiver_port = int(sys.argv[2])
+    window_size = int(sys.argv[3])
+    message = sys.argv[4]
     sender(receiver_ip, receiver_port, window_size,message)
     print("File successfully sent.")
 
