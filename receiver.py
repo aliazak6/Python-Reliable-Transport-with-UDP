@@ -38,10 +38,9 @@ def receiver(receiver_port, window_size):
                 buffer = [None]*buffer_size
             if(pkt_header.type == DATA):
                 if(pkt_header.seq_num <= expected_seq_num+window_size): # bufferin out of order packages
-                    print(pkt_header.seq_num)
                     buffer[pkt_header.seq_num] = (msg)
                     
-                sendACK(s,address,pkt_header.seq_num) # expected seq num is sent anycase
+                sendACK(s,address,expected_seq_num) # expected seq num is sent anycase
                 if(expected_seq_num == pkt_header.seq_num): 
                     expected_seq_num = calculateSeq(buffer,expected_seq_num) # updates seq_num
             if(pkt_header.type == END):

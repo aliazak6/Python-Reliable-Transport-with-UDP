@@ -15,15 +15,12 @@ timeout = 500
 def sender(receiver_ip, receiver_port, window_size,message):
     """TODO: Open socket and send message from sys.stdin"""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    expected_seq_num = 0
     pkg_size = int(len(message) / 1456 + 1)
     sendSTART(s,receiver_ip,receiver_port,pkg_size)
     # at this point connection established and data will be sent
     base = 0
-    buffer_size = pkg_size
-    buffer = [0]*buffer_size
     while base < pkg_size-1:
-        base = sendDATA(s,receiver_ip,receiver_port, window_size, base, message,pkg_size,buffer,expected_seq_num)
+        base = sendDATA(s,receiver_ip,receiver_port, window_size, base, message,pkg_size)
     sendEND(s,receiver_ip,receiver_port,base)
 
 def sendSTART(s,receiver_ip,receiver_port,pkg_size):
@@ -33,7 +30,6 @@ def sendSTART(s,receiver_ip,receiver_port,pkg_size):
     pkt = pkt_header / str(pkg_size)
     byte_pkt = bytes(pkt)
     s.sendto(byte_pkt, (receiver_ip, receiver_port))
-    print(byte_pkt)
     receive_STARTACK(s,receiver_ip,receiver_port,Seq_num,byte_pkt)
 
 def receive_STARTACK(s,receiver_ip,receiver_port,Seq_num,byte_pkt):
@@ -53,33 +49,32 @@ def receive_STARTACK(s,receiver_ip,receiver_port,Seq_num,byte_pkt):
             s.sendto(byte_pkt, (receiver_ip, receiver_port))
             receive_STARTACK(s,receiver_ip,receiver_port,Seq_num,byte_pkt)
 
-def sendDATA(s,receiver_ip,receiver_port,window_size,base,msg,pkg_size,buffer,expected_seq_num) :
+def sendDATA(s,receiver_ip,receiver_port,window_size,base,msg,pkg_size) :
     packages = [] # storing window in order to easily retransmit packages
     sent = base
     
     while sent < min(base + window_size,pkg_size):
-        if(buffer[sent] == 0): # if receiver didnt ack that package
-            pkt_header = PacketHeader(type=DATA, seq_num=sent, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
+        pkt_header = PacketHeader(type=DATA, seq_num=sent, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
 
-            p = randint(1,30)
-            pkt_msg = msg[sent*1456:(sent+1)*1456-1]
+        p = randint(1,30)
+        pkt_msg = msg[sent*1456:(sent+1)*1456-1]
+        pkt_header.checksum = compute_checksum(pkt_header / pkt_msg)
+        print(len(pkt_msg) ,"   " ,sent)
+        pkt = pkt_header / pkt_msg
+        packages.append(pkt)
+        if(p%4==0):
+            pkt_header = PacketHeader(type=DATA, seq_num=sent-3, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
             pkt_header.checksum = compute_checksum(pkt_header / pkt_msg)
-            print(len(pkt_msg) ,"   " ,sent)
             pkt = pkt_header / pkt_msg
-            packages.append(pkt)
-            if(p%4==0):
-                pkt_header = PacketHeader(type=DATA, seq_num=sent, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
-                pkt_header.checksum = compute_checksum(pkt_header / pkt_msg)
-                pkt = pkt_header / pkt_msg
-            s.sendto(bytes(pkt), (receiver_ip, receiver_port))
+        s.sendto(bytes(pkt), (receiver_ip, receiver_port))
         sent+=1 
         if(sent == pkg_size):
             return sent
 
-    base = receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num)   
+    base = receiveACK(s,packages,receiver_ip,receiver_port,base)   
     return base  
 
-def receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num) :
+def receiveACK(s,packages,receiver_ip,receiver_port,base) :
     old_base = base
     while(True):
         # receive packet
@@ -91,19 +86,16 @@ def receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num
             isNotCorrupted = verifyChecksumHeader(pkt_header)
                 # at this point we ensured that arriving packet is not corrupted. 
             if(isNotCorrupted and pkt_header.type == ACK):
-                buffer[pkt_header.seq_num] = 1 # buffers ACK'ed packages
-                print(base)
-                try:
-                    if(buffer[base] == 1):
-                        base =base + 1 # ACK received
+                try:  
+                    base =pkt_header.seq_num + 1 # ACK received
                 except IndexError: 
                     pass
         else:
             if(old_base == base): # Resend all packets in window
                 for package in packages:
-                    if(buffer[package.seq_num]==0):
-                        s.sendto(bytes(package), (receiver_ip, receiver_port))
-                base = receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num)
+                    
+                    s.sendto(bytes(package), (receiver_ip, receiver_port))
+                base = receiveACK(s,packages,receiver_ip,receiver_port,base)
             else:
                 return base
                 
