@@ -74,6 +74,7 @@ def sendACK (s,address, Seq_num):
 def constructDATA(f,buffer):
     for msg in buffer:
         f.write(msg)
+        f.write(bytes(" ","UTF-8"))
     f.close()
     
 
@@ -85,7 +86,7 @@ def main():
     #receiver_port = int(sys.argv[1])
     #window_size = int(sys.argv[2])
     receiver_port = 5000
-    window_size = 20
+    window_size = 50
     receiver(receiver_port, window_size)
 
 if __name__ == "__main__":
