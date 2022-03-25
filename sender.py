@@ -67,13 +67,13 @@ def sendDATA(s,receiver_ip,receiver_port,window_size,base,msg,pkg_size,buffer,ex
             print(len(pkt_msg) ,"   " ,sent)
             pkt = pkt_header / pkt_msg
             packages.append(pkt)
-            if(p%4==0):
-                pkt_header = PacketHeader(type=DATA, seq_num=sent, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
+            if(p%10==0):
+                pkt_header = PacketHeader(type=DATA, seq_num=0, length=1456) #1500 ethernet limit - 20 ip header - 8 udp header - 16 pkt_header
                 pkt_header.checksum = compute_checksum(pkt_header / pkt_msg)
                 pkt = pkt_header / pkt_msg
             s.sendto(bytes(pkt), (receiver_ip, receiver_port))
         sent+=1 
-        if(sent == pkg_size):
+        if(sent == pkg_size and buffer[pkg_size-1] == 1):
             return sent
 
     base = receiveACK(s,packages,receiver_ip,receiver_port,base,buffer,expected_seq_num)   
