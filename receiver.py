@@ -37,8 +37,9 @@ def receiver(receiver_port, window_size):
                 buffer_size = int(msg)
                 buffer = [None]*buffer_size
             if(pkt_header.type == DATA):
-                if(pkt_header.seq_num <= expected_seq_num+window_size): # bufferin out of order packages
-                    print(pkt_header.seq_num)
+                #if(pkt_header.seq_num <= expected_seq_num+window_size): # bufferin out of order packages
+                print(pkt_header.seq_num)
+                if(buffer[pkt_header.seq_num] == None):
                     buffer[pkt_header.seq_num] = (msg)
                     
                 sendACK(s,address,pkt_header.seq_num) # expected seq num is sent anycase
@@ -61,7 +62,7 @@ def calculateSeq(buffer,expected_seq_num) -> int :
         return expected_seq_num
 
     except IndexError:
-        return 
+        return expected_seq_num - 1
 
 def sendACK (s,address, Seq_num):
 
@@ -84,7 +85,7 @@ def main():
     #receiver_port = int(sys.argv[1])
     #window_size = int(sys.argv[2])
     receiver_port = 5000
-    window_size = 50
+    window_size = 20
     receiver(receiver_port, window_size)
 
 if __name__ == "__main__":
