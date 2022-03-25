@@ -148,25 +148,12 @@ def increase_base(buffer,base) -> int :
 def main():
     """Parse command-line arguments and call sender function """
     
-<<<<<<< HEAD
-    #if len(sys.argv) != 5:
-    #    sys.exit("Usage: python sender.py [Receiver IP] [Receiver Port] [Window Size] < [message]")
-    #receiver_ip = socket.gethostbyname(sys.argv[1])
-    #receiver_port = int(sys.argv[2])
-    #window_size = int(sys.argv[3])
-    #message = sys.argv[4]
-    receiver_ip = "127.0.0.1"
-    receiver_port = 5000
-    window_size = 50
-    message = "aliabi"
-=======
     if len(sys.argv) != 5:
         sys.exit("Usage: python sender.py [Receiver IP] [Receiver Port] [Window Size] < [message]")
     receiver_ip = socket.gethostbyname(sys.argv[1])
     receiver_port = int(sys.argv[2])
     window_size = int(sys.argv[3])
     message = sys.argv[4]
->>>>>>> b9d35656f31482f6562937e87a47fae8f53a09a1
     sender(receiver_ip, receiver_port, window_size,message)
     print("File successfully sent.")
 
