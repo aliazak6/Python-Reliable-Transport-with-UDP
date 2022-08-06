@@ -1,6 +1,5 @@
 import sys
 import socket
-import time
 from util import *
 
 START = 0
@@ -18,15 +17,12 @@ def receiver(receiver_port, window_size):
     buffer = []
     EOF = False # end of file
 
-
     while ~EOF:
-
         # receive packet        
         pkt, address = s.recvfrom(1500)
         # extract header and payload
         pkt_header = PacketHeader(pkt[:16])
         msg = pkt[16:16+pkt_header.length]
-
         # verify checksum
         isNotCorrupted = verifyChecksum(pkt_header,msg)
         #send ACK if checksum is correct
@@ -46,7 +42,6 @@ def receiver(receiver_port, window_size):
         print(str(msg))
 
     f.write(buffer) # save file when transmition ends.
-
     f.close()
 
 def calculateSeq(buffer,expected_seq_num):
@@ -57,7 +52,6 @@ def calculateSeq(buffer,expected_seq_num):
         expected_seq_num +=1
 
 def sendACK (s,address, Seq_num):
-
     pkt_header = PacketHeader(type=ACK, seq_num=Seq_num, length=0)
     pkt_header.checksum = compute_checksum(pkt_header)
     pkt = pkt_header
@@ -65,17 +59,13 @@ def sendACK (s,address, Seq_num):
 
 def constructDATA(f,msg,seq_num):
     f.write(msg)
-    
-
 
 def main():
     """Parse command-line argument and call receiver function """
-    #if len(sys.argv) != 3:
-    #    sys.exit("Usage: python receiver.py [Receiver Port] [Window Size]")
-    #receiver_port = int(sys.argv[1])
-    #window_size = int(sys.argv[2])
-    receiver_port = 5000
-    window_size = 50
+    if len(sys.argv) != 3:
+        sys.exit("Usage: python receiver.py [Receiver Port] [Window Size]")
+    receiver_port = int(sys.argv[1])
+    window_size = int(sys.argv[2])
     receiver(receiver_port, window_size)
 
 if __name__ == "__main__":
